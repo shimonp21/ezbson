@@ -1,0 +1,1334 @@
+package ezbson
+
+import (
+	"testing"
+	timelib "time"
+
+	"github.com/stretchr/testify/assert"
+)
+
+type EmptyStruct struct{}
+
+type HelloStruct struct {
+	Hello string
+}
+
+type VariousStruct struct {
+	Bin     []byte
+	Int     int
+	Int32   int32
+	Int64   int64
+	Minus   int
+	Minus32 int32
+	Minus64 int64
+	Double  float64
+	Str     string
+	Time    timelib.Time
+	False   bool
+	True    bool
+}
+
+type VariousStructPtr struct {
+	Bin     *[]byte
+	Int     *int
+	Int32   *int32
+	Int64   *int64
+	Minus   *int
+	Minus32 *int32
+	Minus64 *int64
+	Double  *float64
+	Str     *string
+	Time    *timelib.Time
+	False   *bool
+	True    *bool
+}
+
+type SortingStruct struct {
+	Zyx string
+	Abc string
+}
+
+type EmbeddedMapStruct struct {
+	A string
+	B map[string]any
+	C map[string]int64
+}
+
+type EmbeddedMapStructPtr struct {
+	A *string
+	B *map[string]any
+	C *map[string]*int64
+}
+
+type EmbeddedDocStruct struct {
+	A string
+	B struct {
+		X string
+		Y []byte
+	}
+	C struct {
+		T1 int64
+		T2 int64
+	}
+}
+
+type EmbeddedDocStructPtr struct {
+	A *string
+	B *struct {
+		X *string
+		Y *[]byte
+	}
+	C *struct {
+		T1 *int64
+		T2 *int64
+	}
+}
+
+type EmbeddedArrayStruct struct {
+	BSON []any
+}
+
+type EmbeddedArrayStructPtr struct {
+	BSON *[]any
+}
+
+func emptyMapPtr() *map[string]any {
+	m := make(map[string]any)
+	return &m
+}
+
+func variousMapPtr() *map[string]any {
+	time, err := timelib.Parse(timelib.RFC3339, "2006-01-02T15:04:05Z")
+	if err != nil {
+		panic("failed to parse time")
+	}
+
+	bin := []byte("world")
+	num := int(0x0badc0dedeadbeef)
+	num32 := int32(0x0badbabe)
+	num64 := int64(0x0badc0dedeadbeef)
+	minus := int(-5)
+	minus32 := int32(-5)
+	minus64 := int64(-5)
+	double := float64(5.05)
+	str := "world"
+
+	flse := false
+	tre := true
+
+	m := map[string]any{
+		"bin":     &bin,
+		"double":  &double,
+		"false":   &flse,
+		"int":     &num,
+		"int32":   &num32,
+		"int64":   &num64,
+		"minus":   &minus,
+		"minus32": &minus32,
+		"minus64": &minus64,
+		"str":     &str,
+		"time":    &time,
+		"true":    &tre,
+	}
+
+	return &m
+}
+
+func embeddedDocMapPtr() *map[string]any {
+	s := "123"
+
+	x := "hello"
+	y := []byte("world")
+
+	t1 := int64(0x0badc0dedeadbeef)
+	t2 := int64(0x0badbabe)
+
+	m1 := map[string]any{
+		"x": &x,
+		"y": &y,
+	}
+
+	m2 := map[string]*int64{
+		"t1": &t1,
+		"t2": &t2,
+	}
+
+	m := map[string]any{
+		"a": &s,
+		"b": &m1,
+		"c": &m2,
+	}
+
+	return &m
+}
+
+func embeddedArrayMapPtr() *map[string]any {
+	str := "awesome"
+	f := float64(5.05)
+	n := int64(1986)
+
+	slice := []any{
+		&str,
+		&f,
+		&n,
+	}
+
+	m := map[string]any{
+		"BSON": &slice,
+	}
+
+	return &m
+}
+
+func variousStructPtr() *VariousStructPtr {
+	time, err := timelib.Parse(timelib.RFC3339, "2006-01-02T15:04:05Z")
+	if err != nil {
+		panic("failed to parse time")
+	}
+
+	bin := []byte("world")
+	num := int(0x0badc0dedeadbeef)
+	num32 := int32(0x0badbabe)
+	num64 := int64(0x0badc0dedeadbeef)
+	minus := int(-5)
+	minus32 := int32(-5)
+	minus64 := int64(-5)
+	double := float64(5.05)
+	str := "world"
+
+	flse := false
+	tre := true
+
+	s := VariousStructPtr{
+		Bin:     &bin,
+		Int:     &num,
+		Int64:   &num64,
+		Int32:   &num32,
+		Minus:   &minus,
+		Minus32: &minus32,
+		Minus64: &minus64,
+		Double:  &double,
+		Str:     &str,
+		Time:    &time,
+		False:   &flse,
+		True:    &tre,
+	}
+
+	return &s
+}
+
+func embeddedDocStructPtr() *EmbeddedDocStructPtr {
+	a := "123"
+
+	x := "hello"
+	y := []byte("world")
+
+	t1 := int64(0x0badc0dedeadbeef)
+	t2 := int64(0x0badbabe)
+
+	b := struct {
+		X *string
+		Y *[]byte
+	}{
+		&x,
+		&y,
+	}
+
+	c := struct {
+		T1 *int64
+		T2 *int64
+	}{
+		&t1,
+		&t2,
+	}
+
+	return &EmbeddedDocStructPtr{
+		&a,
+		&b,
+		&c,
+	}
+}
+
+func embeddedArrayStructPtr() *EmbeddedArrayStructPtr {
+	str := "awesome"
+	f := float64(5.05)
+	n := int64(1986)
+
+	slice := []any{
+		&str,
+		&f,
+		&n,
+	}
+
+	return &EmbeddedArrayStructPtr{
+		&slice,
+	}
+}
+
+func mapToStructPtr() *map[string]any {
+	a := "123"
+
+	x := "hello"
+	y := []byte("world")
+
+	t1 := int64(0x0badc0dedeadbeef)
+	t2 := int64(0x0badbabe)
+
+	b := struct {
+		X *string
+		Y *[]byte
+	}{
+		&x,
+		&y,
+	}
+
+	c := struct {
+		T1 *int64
+		T2 *int64
+	}{
+		&t1,
+		&t2,
+	}
+
+	m := map[string]any{
+		"a": &a,
+		"b": &b,
+		"c": &c,
+	}
+
+	return &m
+}
+
+func embeddedMapStructPtr() *EmbeddedMapStructPtr {
+	s := "123"
+
+	x := "hello"
+	y := []byte("world")
+
+	t1 := int64(0x0badc0dedeadbeef)
+	t2 := int64(0x0badbabe)
+
+	m1 := map[string]any{
+		"x": &x,
+		"y": &y,
+	}
+
+	m2 := map[string]*int64{
+		"t1": &t1,
+		"t2": &t2,
+	}
+
+	return &EmbeddedMapStructPtr{
+		&s,
+		&m1,
+		&m2,
+	}
+}
+
+func TestSerialize(t *testing.T) {
+	time, err := timelib.Parse(timelib.RFC3339, "2006-01-02T15:04:05Z")
+	if !assert.Nil(t, err) {
+		return
+	}
+
+	tests := []struct {
+		name     string
+		doc      any
+		expected []byte
+	}{
+		{
+			"empty_map",
+			make(map[string]any),
+			[]byte{
+				0x05, 0x00, 0x00, 0x00, // Size
+				0x00, // Terminator
+			},
+		},
+		{
+			"empty_map_ptr",
+			emptyMapPtr(),
+			[]byte{
+				0x05, 0x00, 0x00, 0x00, // Size
+				0x00, // Terminator
+			},
+		},
+		{
+			"hello_world_map",
+			map[string]any{
+				"hello": "world",
+			},
+			[]byte{
+				0x16, 0x00, 0x00, 0x00, // total document length
+				0x02,                          // etype (string)
+				'h', 'e', 'l', 'l', 'o', 0x00, // ename
+				0x06, 0x00, 0x00, 0x00, // string-length (incl' nullterminator)
+				'w', 'o', 'r', 'l', 'd', 0x00, // string-value
+				0x00, // done
+			},
+		},
+		{
+			"various_map",
+			map[string]any{
+				"bin":     []byte("world"),
+				"double":  float64(5.05),
+				"false":   false,
+				"int":     int(0x0badc0dedeadbeef),
+				"int32":   int32(0x0badbabe),
+				"int64":   int64(0x0badc0dedeadbeef),
+				"minus":   int(-5),
+				"minus32": int32(-5),
+				"minus64": int64(-5),
+				"str":     "world",
+				"time":    time,
+				"true":    true,
+			},
+			[]byte{
+				0xa4, 0x00, 0x00, 0x00, // total document length
+
+				0x05, // etype (binary)
+				'b', 'i', 'n', 0x00,
+				0x05, 0x00, 0x00, 0x00, // buffer-length
+				0x00, // subtype
+				'w', 'o', 'r', 'l', 'd',
+
+				0x01, // etype-double
+				'd', 'o', 'u', 'b', 'l', 'e', 0x00,
+				0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x14, 0x40,
+
+				0x08, // etype-boolean
+				'f', 'a', 'l', 's', 'e', 0x00,
+				0x00,
+
+				0x12,
+				'i', 'n', 't', 0x00,
+				0xef, 0xbe, 0xad, 0xde, 0xde, 0xc0, 0xad, 0x0b,
+
+				0x10, // etype-int32
+				'i', 'n', 't', '3', '2', 0x00,
+				0xbe, 0xba, 0xad, 0x0b,
+
+				0x12, //etype-int64
+				'i', 'n', 't', '6', '4', 0x00,
+				0xef, 0xbe, 0xad, 0xde, 0xde, 0xc0, 0xad, 0x0b,
+
+				0x12,
+				'm', 'i', 'n', 'u', 's', 0x00,
+				0xfb, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+
+				0x10, // etype-int32
+				'm', 'i', 'n', 'u', 's', '3', '2', 0x00,
+				0xfb, 0xff, 0xff, 0xff,
+
+				0x12, // etype-int64
+				'm', 'i', 'n', 'u', 's', '6', '4', 0x00,
+				0xfb, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+
+				0x02, // etype string
+				's', 't', 'r', 0x00,
+				0x06, 0x00, 0x00, 0x00, // string-length + 1
+				'w', 'o', 'r', 'l', 'd', 0x00,
+
+				0x09, // etype-time
+				't', 'i', 'm', 'e', 0x00,
+				0x88, 0x7e, 0xa5, 0x8b, 0x08, 0x01, 0x00, 0x00,
+
+				0x08, //etype-bool
+				't', 'r', 'u', 'e', 0x00,
+				0x01,
+
+				0x00, // done
+			},
+		},
+		{
+			"various_map_ptr",
+			variousMapPtr(),
+			[]byte{
+				0xa4, 0x00, 0x00, 0x00, // total document length
+
+				0x05, // etype (binary)
+				'b', 'i', 'n', 0x00,
+				0x05, 0x00, 0x00, 0x00, // buffer-length
+				0x00, // subtype
+				'w', 'o', 'r', 'l', 'd',
+
+				0x01, // etype-double
+				'd', 'o', 'u', 'b', 'l', 'e', 0x00,
+				0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x14, 0x40,
+
+				0x08, // etype-boolean
+				'f', 'a', 'l', 's', 'e', 0x00,
+				0x00,
+
+				0x12,
+				'i', 'n', 't', 0x00,
+				0xef, 0xbe, 0xad, 0xde, 0xde, 0xc0, 0xad, 0x0b,
+
+				0x10, // etype-int32
+				'i', 'n', 't', '3', '2', 0x00,
+				0xbe, 0xba, 0xad, 0x0b,
+
+				0x12, //etype-int64
+				'i', 'n', 't', '6', '4', 0x00,
+				0xef, 0xbe, 0xad, 0xde, 0xde, 0xc0, 0xad, 0x0b,
+
+				0x12,
+				'm', 'i', 'n', 'u', 's', 0x00,
+				0xfb, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+
+				0x10, // etype-int32
+				'm', 'i', 'n', 'u', 's', '3', '2', 0x00,
+				0xfb, 0xff, 0xff, 0xff,
+
+				0x12, // etype-int64
+				'm', 'i', 'n', 'u', 's', '6', '4', 0x00,
+				0xfb, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+
+				0x02, // etype string
+				's', 't', 'r', 0x00,
+				0x06, 0x00, 0x00, 0x00, // string-length + 1
+				'w', 'o', 'r', 'l', 'd', 0x00,
+
+				0x09, // etype-time
+				't', 'i', 'm', 'e', 0x00,
+				0x88, 0x7e, 0xa5, 0x8b, 0x08, 0x01, 0x00, 0x00,
+
+				0x08, //etype-bool
+				't', 'r', 'u', 'e', 0x00,
+				0x01,
+
+				0x00, // done
+			},
+		},
+		{
+			"sorting_map",
+			map[string]any{
+				"zyx": "AAA",
+				"abc": "ZZZ",
+			},
+			[]byte{
+				0x1f, 0x00, 0x00, 0x00, // total document size
+				0x02,                // etype (string)
+				'a', 'b', 'c', 0x00, // 'abc'
+				0x04, 0x00, 0x00, 0x00, // len('ZZZ') + 1
+				'Z', 'Z', 'Z', 0x00, // 'ZZZ\x00'
+				0x02,                // etype string
+				'z', 'y', 'x', 0x00, //  'zyx'
+				0x04, 0x00, 0x00, 0x00, // len('AAA') + 1
+				'A', 'A', 'A', 0x00, // 'AAA\x00'
+				0x00,
+			},
+		},
+		{
+			"map->map",
+			map[string]any{
+				"a": "123",
+				"b": map[string]any{
+					"x": "hello",
+					"y": []byte("world"),
+				},
+				"c": map[string]int64{
+					"t1": 0x0badc0dedeadbeef,
+					"t2": 0x0badbabe,
+				},
+			},
+			[]byte{
+				0x52, 0x00, 0x00, 0x00, // total document size
+
+				0x02, // etype-string
+				'a', 0x00,
+				0x04, 0x00, 0x00, 0x00,
+				'1', '2', '3', 0x00,
+
+				0x03, // etype-doc
+				'b', 0x00,
+				0x1f, 0x00, 0x00, 0x00, // b's document size
+				0x02, // etype-string
+				'x', 0x00,
+				0x06, 0x00, 0x00, 0x00,
+				'h', 'e', 'l', 'l', 'o', 0x00,
+				0x05, // etype-binary
+				'y', 0x00,
+				0x05, 0x00, 0x00, 0x00,
+				0x00,
+				'w', 'o', 'r', 'l', 'd',
+				0x00, // doc-term
+
+				0x03, // etype-doc
+				'c', 0x00,
+				0x1d, 0x00, 0x00, 0x00,
+				0x12, // etype int64
+				't', '1', 0x00,
+				0xef, 0xbe, 0xad, 0xde, 0xde, 0xc0, 0xad, 0x0b,
+				0x12, // type int64
+				't', '2', 0x00,
+				0xbe, 0xba, 0xad, 0x0b, 0x00, 0x00, 0x00, 0x00,
+				0x00, //doc-term
+
+				0x00,
+			},
+		},
+		{
+			"map->map ptr",
+			embeddedDocMapPtr(),
+			[]byte{
+				0x52, 0x00, 0x00, 0x00, // total document size
+
+				0x02, // etype-string
+				'a', 0x00,
+				0x04, 0x00, 0x00, 0x00,
+				'1', '2', '3', 0x00,
+
+				0x03, // etype-doc
+				'b', 0x00,
+				0x1f, 0x00, 0x00, 0x00, // b's document size
+				0x02, // etype-string
+				'x', 0x00,
+				0x06, 0x00, 0x00, 0x00,
+				'h', 'e', 'l', 'l', 'o', 0x00,
+				0x05, // etype-binary
+				'y', 0x00,
+				0x05, 0x00, 0x00, 0x00,
+				0x00,
+				'w', 'o', 'r', 'l', 'd',
+				0x00, // doc-term
+
+				0x03, // etype-doc
+				'c', 0x00,
+				0x1d, 0x00, 0x00, 0x00,
+				0x12, // etype int64
+				't', '1', 0x00,
+				0xef, 0xbe, 0xad, 0xde, 0xde, 0xc0, 0xad, 0x0b,
+				0x12, // type int64
+				't', '2', 0x00,
+				0xbe, 0xba, 0xad, 0x0b, 0x00, 0x00, 0x00, 0x00,
+				0x00, //doc-term
+
+				0x00,
+			},
+		},
+		{
+			"map->slice",
+			map[string]any{
+				"BSON": []any{"awesome", float64(5.05), int64(1986)},
+			},
+			[]byte{
+				0x35, 0x00, 0x00, 0x00, // total document size
+
+				0x04, // etype-array
+				'B', 'S', 'O', 'N', 0x00,
+				0x2a, 0x00, 0x00, 0x00,
+
+				0x02, //etype-string
+				'0', 0x00,
+				0x08, 0x00, 0x00, 0x00,
+				'a', 'w', 'e', 's', 'o', 'm', 'e', 0x00,
+
+				0x01, // etype-double
+				'1', 0x00,
+				0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x14, 0x40,
+
+				0x12, // etype int64
+				'2', 0x00,
+				0xc2, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+
+				0x00, // end slice
+
+				0x00, // end doc
+			},
+		},
+		{
+			"map->slice ptr",
+			embeddedArrayMapPtr(),
+			[]byte{
+				0x35, 0x00, 0x00, 0x00, // total document size
+
+				0x04, // etype-array
+				'B', 'S', 'O', 'N', 0x00,
+				0x2a, 0x00, 0x00, 0x00,
+
+				0x02, //etype-string
+				'0', 0x00,
+				0x08, 0x00, 0x00, 0x00,
+				'a', 'w', 'e', 's', 'o', 'm', 'e', 0x00,
+
+				0x01, // etype-double
+				'1', 0x00,
+				0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x14, 0x40,
+
+				0x12, // etype int64
+				'2', 0x00,
+				0xc2, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+
+				0x00, // end slice
+
+				0x00, // end doc
+			},
+		},
+		{
+			"map->struct",
+			map[string]any{
+				"a": "123",
+				"b": struct {
+					X string
+					Y []byte
+				}{
+					"hello",
+					[]byte("world"),
+				},
+				"c": struct {
+					T1 int64
+					T2 int64
+				}{
+					0x0badc0dedeadbeef,
+					0x0badbabe,
+				},
+			},
+			[]byte{
+				0x52, 0x00, 0x00, 0x00, // total document size
+
+				0x02, // etype-string
+				'a', 0x00,
+				0x04, 0x00, 0x00, 0x00,
+				'1', '2', '3', 0x00,
+
+				0x03, // etype-doc
+				'b', 0x00,
+				0x1f, 0x00, 0x00, 0x00, // b's document size
+				0x02, // etype-string
+				'X', 0x00,
+				0x06, 0x00, 0x00, 0x00,
+				'h', 'e', 'l', 'l', 'o', 0x00,
+				0x05, // etype-binary
+				'Y', 0x00,
+				0x05, 0x00, 0x00, 0x00,
+				0x00,
+				'w', 'o', 'r', 'l', 'd',
+				0x00, // doc-term
+
+				0x03, // etype-doc
+				'c', 0x00,
+				0x1d, 0x00, 0x00, 0x00,
+				0x12, // etype int64
+				'T', '1', 0x00,
+				0xef, 0xbe, 0xad, 0xde, 0xde, 0xc0, 0xad, 0x0b,
+				0x12, // type int64
+				'T', '2', 0x00,
+				0xbe, 0xba, 0xad, 0x0b, 0x00, 0x00, 0x00, 0x00,
+				0x00, //doc-term
+
+				0x00,
+			},
+		},
+		{
+			"map->struct ptr",
+			mapToStructPtr(),
+			[]byte{
+				0x52, 0x00, 0x00, 0x00, // total document size
+
+				0x02, // etype-string
+				'a', 0x00,
+				0x04, 0x00, 0x00, 0x00,
+				'1', '2', '3', 0x00,
+
+				0x03, // etype-doc
+				'b', 0x00,
+				0x1f, 0x00, 0x00, 0x00, // b's document size
+				0x02, // etype-string
+				'X', 0x00,
+				0x06, 0x00, 0x00, 0x00,
+				'h', 'e', 'l', 'l', 'o', 0x00,
+				0x05, // etype-binary
+				'Y', 0x00,
+				0x05, 0x00, 0x00, 0x00,
+				0x00,
+				'w', 'o', 'r', 'l', 'd',
+				0x00, // doc-term
+
+				0x03, // etype-doc
+				'c', 0x00,
+				0x1d, 0x00, 0x00, 0x00,
+				0x12, // etype int64
+				'T', '1', 0x00,
+				0xef, 0xbe, 0xad, 0xde, 0xde, 0xc0, 0xad, 0x0b,
+				0x12, // type int64
+				'T', '2', 0x00,
+				0xbe, 0xba, 0xad, 0x0b, 0x00, 0x00, 0x00, 0x00,
+				0x00, //doc-term
+
+				0x00,
+			},
+		},
+		{
+			"empty_struct",
+			EmptyStruct{},
+			[]byte{
+				0x05, 0x00, 0x00, 0x00, // Size
+				0x00, // Terminator
+			},
+		},
+		{
+			"empty_struct_ptr",
+			&EmptyStruct{},
+			[]byte{
+				0x05, 0x00, 0x00, 0x00, // Size
+				0x00, // Terminator
+			},
+		},
+		{
+			"hello_struct",
+			HelloStruct{"world"},
+			[]byte{
+				0x16, 0x00, 0x00, 0x00, // total document length
+				0x02,                          // etype (string)
+				'H', 'e', 'l', 'l', 'o', 0x00, // ename
+				0x06, 0x00, 0x00, 0x00, // string-length (incl' nullterminator)
+				'w', 'o', 'r', 'l', 'd', 0x00, // string-value
+				0x00, // done
+			},
+		},
+		{
+			"various_struct",
+			VariousStruct{
+				Bin:     []byte("world"),
+				Int:     int(0x0badc0dedeadbeef),
+				Int32:   int32(0x0badbabe),
+				Int64:   int64(0x0badc0dedeadbeef),
+				Minus:   int(-5),
+				Minus32: int32(-5),
+				Minus64: int64(-5),
+				Double:  float64(5.05),
+				Str:     "world",
+				Time:    time,
+				True:    true,
+				False:   false,
+			},
+			[]byte{
+				0xa4, 0x00, 0x00, 0x00, // total document length
+
+				0x05, // etype (binary)
+				'B', 'i', 'n', 0x00,
+				0x05, 0x00, 0x00, 0x00, // buffer-length
+				0x00, // subtype
+				'w', 'o', 'r', 'l', 'd',
+
+				0x01, // etype-double
+				'D', 'o', 'u', 'b', 'l', 'e', 0x00,
+				0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x14, 0x40,
+
+				0x08, // etype-boolean
+				'F', 'a', 'l', 's', 'e', 0x00,
+				0x00,
+
+				0x12,
+				'I', 'n', 't', 0x00,
+				0xef, 0xbe, 0xad, 0xde, 0xde, 0xc0, 0xad, 0x0b,
+
+				0x10, // etype-int32
+				'I', 'n', 't', '3', '2', 0x00,
+				0xbe, 0xba, 0xad, 0x0b,
+
+				0x12, //etype-int64
+				'I', 'n', 't', '6', '4', 0x00,
+				0xef, 0xbe, 0xad, 0xde, 0xde, 0xc0, 0xad, 0x0b,
+
+				0x12,
+				'M', 'i', 'n', 'u', 's', 0x00,
+				0xfb, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+
+				0x10, // etype-int32
+				'M', 'i', 'n', 'u', 's', '3', '2', 0x00,
+				0xfb, 0xff, 0xff, 0xff,
+
+				0x12, // etype-int64
+				'M', 'i', 'n', 'u', 's', '6', '4', 0x00,
+				0xfb, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+
+				0x02, // etype string
+				'S', 't', 'r', 0x00,
+				0x06, 0x00, 0x00, 0x00, // string-length + 1
+				'w', 'o', 'r', 'l', 'd', 0x00,
+
+				0x09, // etype-time
+				'T', 'i', 'm', 'e', 0x00,
+				0x88, 0x7e, 0xa5, 0x8b, 0x08, 0x01, 0x00, 0x00,
+
+				0x08, //etype-bool
+				'T', 'r', 'u', 'e', 0x00,
+				0x01,
+
+				0x00, // done
+			},
+		},
+		{
+			"various_struct_ptr",
+			variousStructPtr(),
+			[]byte{
+				0xa4, 0x00, 0x00, 0x00, // total document length
+
+				0x05, // etype (binary)
+				'B', 'i', 'n', 0x00,
+				0x05, 0x00, 0x00, 0x00, // buffer-length
+				0x00, // subtype
+				'w', 'o', 'r', 'l', 'd',
+
+				0x01, // etype-double
+				'D', 'o', 'u', 'b', 'l', 'e', 0x00,
+				0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x14, 0x40,
+
+				0x08, // etype-boolean
+				'F', 'a', 'l', 's', 'e', 0x00,
+				0x00,
+
+				0x12,
+				'I', 'n', 't', 0x00,
+				0xef, 0xbe, 0xad, 0xde, 0xde, 0xc0, 0xad, 0x0b,
+
+				0x10, // etype-int32
+				'I', 'n', 't', '3', '2', 0x00,
+				0xbe, 0xba, 0xad, 0x0b,
+
+				0x12, //etype-int64
+				'I', 'n', 't', '6', '4', 0x00,
+				0xef, 0xbe, 0xad, 0xde, 0xde, 0xc0, 0xad, 0x0b,
+
+				0x12,
+				'M', 'i', 'n', 'u', 's', 0x00,
+				0xfb, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+
+				0x10, // etype-int32
+				'M', 'i', 'n', 'u', 's', '3', '2', 0x00,
+				0xfb, 0xff, 0xff, 0xff,
+
+				0x12, // etype-int64
+				'M', 'i', 'n', 'u', 's', '6', '4', 0x00,
+				0xfb, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+
+				0x02, // etype string
+				'S', 't', 'r', 0x00,
+				0x06, 0x00, 0x00, 0x00, // string-length + 1
+				'w', 'o', 'r', 'l', 'd', 0x00,
+
+				0x09, // etype-time
+				'T', 'i', 'm', 'e', 0x00,
+				0x88, 0x7e, 0xa5, 0x8b, 0x08, 0x01, 0x00, 0x00,
+
+				0x08, //etype-bool
+				'T', 'r', 'u', 'e', 0x00,
+				0x01,
+
+				0x00, // done
+			},
+		},
+		{
+			"sorting_struct",
+			SortingStruct{
+				Zyx: "AAA",
+				Abc: "ZZZ",
+			},
+			[]byte{
+				0x1f, 0x00, 0x00, 0x00, // total document size
+				0x02,                // etype (string)
+				'A', 'b', 'c', 0x00, // 'abc'
+				0x04, 0x00, 0x00, 0x00, // len('ZZZ') + 1
+				'Z', 'Z', 'Z', 0x00, // 'ZZZ\x00'
+				0x02,                // etype string
+				'Z', 'y', 'x', 0x00, //  'zyx'
+				0x04, 0x00, 0x00, 0x00, // len('AAA') + 1
+				'A', 'A', 'A', 0x00, // 'AAA\x00'
+				0x00,
+			},
+		},
+		{
+			"struct->map",
+			EmbeddedMapStruct{
+				A: "123",
+				B: map[string]any{
+					"x": "hello",
+					"y": []byte("world"),
+				},
+				C: map[string]int64{
+					"t1": int64(0x0badc0dedeadbeef),
+					"t2": int64(0x0badbabe),
+				},
+			},
+			[]byte{
+				0x52, 0x00, 0x00, 0x00, // total document size
+
+				0x02, // etype-string
+				'A', 0x00,
+				0x04, 0x00, 0x00, 0x00,
+				'1', '2', '3', 0x00,
+
+				0x03, // etype-doc
+				'B', 0x00,
+				0x1f, 0x00, 0x00, 0x00, // b's document size
+				0x02, // etype-string
+				'x', 0x00,
+				0x06, 0x00, 0x00, 0x00,
+				'h', 'e', 'l', 'l', 'o', 0x00,
+				0x05, // etype-binary
+				'y', 0x00,
+				0x05, 0x00, 0x00, 0x00,
+				0x00,
+				'w', 'o', 'r', 'l', 'd',
+				0x00, // doc-term
+
+				0x03, // etype-doc
+				'C', 0x00,
+				0x1d, 0x00, 0x00, 0x00,
+				0x12, // etype int64
+				't', '1', 0x00,
+				0xef, 0xbe, 0xad, 0xde, 0xde, 0xc0, 0xad, 0x0b,
+				0x12, // type int64
+				't', '2', 0x00,
+				0xbe, 0xba, 0xad, 0x0b, 0x00, 0x00, 0x00, 0x00,
+				0x00, //doc-term
+
+				0x00,
+			},
+		},
+		{
+			"struct->map ptr",
+			embeddedMapStructPtr(),
+			[]byte{
+				0x52, 0x00, 0x00, 0x00, // total document size
+
+				0x02, // etype-string
+				'A', 0x00,
+				0x04, 0x00, 0x00, 0x00,
+				'1', '2', '3', 0x00,
+
+				0x03, // etype-doc
+				'B', 0x00,
+				0x1f, 0x00, 0x00, 0x00, // b's document size
+				0x02, // etype-string
+				'x', 0x00,
+				0x06, 0x00, 0x00, 0x00,
+				'h', 'e', 'l', 'l', 'o', 0x00,
+				0x05, // etype-binary
+				'y', 0x00,
+				0x05, 0x00, 0x00, 0x00,
+				0x00,
+				'w', 'o', 'r', 'l', 'd',
+				0x00, // doc-term
+
+				0x03, // etype-doc
+				'C', 0x00,
+				0x1d, 0x00, 0x00, 0x00,
+				0x12, // etype int64
+				't', '1', 0x00,
+				0xef, 0xbe, 0xad, 0xde, 0xde, 0xc0, 0xad, 0x0b,
+				0x12, // type int64
+				't', '2', 0x00,
+				0xbe, 0xba, 0xad, 0x0b, 0x00, 0x00, 0x00, 0x00,
+				0x00, //doc-term
+
+				0x00,
+			},
+		},
+		{
+			"struct->struct",
+			EmbeddedDocStruct{
+				A: "123",
+				B: struct {
+					X string
+					Y []byte
+				}{
+					X: "hello",
+					Y: []byte("world"),
+				},
+				C: struct {
+					T1 int64
+					T2 int64
+				}{
+					T1: 0x0badc0dedeadbeef,
+					T2: 0x0badbabe,
+				},
+			},
+			[]byte{
+				0x52, 0x00, 0x00, 0x00, // total document size
+
+				0x02, // etype-string
+				'A', 0x00,
+				0x04, 0x00, 0x00, 0x00,
+				'1', '2', '3', 0x00,
+
+				0x03, // etype-doc
+				'B', 0x00,
+				0x1f, 0x00, 0x00, 0x00, // b's document size
+				0x02, // etype-string
+				'X', 0x00,
+				0x06, 0x00, 0x00, 0x00,
+				'h', 'e', 'l', 'l', 'o', 0x00,
+				0x05, // etype-binary
+				'Y', 0x00,
+				0x05, 0x00, 0x00, 0x00,
+				0x00,
+				'w', 'o', 'r', 'l', 'd',
+				0x00, // doc-term
+
+				0x03, // etype-doc
+				'C', 0x00,
+				0x1d, 0x00, 0x00, 0x00,
+				0x12, // etype int64
+				'T', '1', 0x00,
+				0xef, 0xbe, 0xad, 0xde, 0xde, 0xc0, 0xad, 0x0b,
+				0x12, // type int64
+				'T', '2', 0x00,
+				0xbe, 0xba, 0xad, 0x0b, 0x00, 0x00, 0x00, 0x00,
+				0x00, //doc-term
+
+				0x00,
+			},
+		},
+		{
+			"struct->struct ptr",
+			embeddedDocStructPtr(),
+			[]byte{
+				0x52, 0x00, 0x00, 0x00, // total document size
+
+				0x02, // etype-string
+				'A', 0x00,
+				0x04, 0x00, 0x00, 0x00,
+				'1', '2', '3', 0x00,
+
+				0x03, // etype-doc
+				'B', 0x00,
+				0x1f, 0x00, 0x00, 0x00, // b's document size
+				0x02, // etype-string
+				'X', 0x00,
+				0x06, 0x00, 0x00, 0x00,
+				'h', 'e', 'l', 'l', 'o', 0x00,
+				0x05, // etype-binary
+				'Y', 0x00,
+				0x05, 0x00, 0x00, 0x00,
+				0x00,
+				'w', 'o', 'r', 'l', 'd',
+				0x00, // doc-term
+
+				0x03, // etype-doc
+				'C', 0x00,
+				0x1d, 0x00, 0x00, 0x00,
+				0x12, // etype int64
+				'T', '1', 0x00,
+				0xef, 0xbe, 0xad, 0xde, 0xde, 0xc0, 0xad, 0x0b,
+				0x12, // type int64
+				'T', '2', 0x00,
+				0xbe, 0xba, 0xad, 0x0b, 0x00, 0x00, 0x00, 0x00,
+				0x00, //doc-term
+
+				0x00,
+			},
+		},
+		{
+			"struct->slice",
+			EmbeddedArrayStruct{
+				BSON: []any{"awesome", float64(5.05), int64(1986)},
+			},
+			[]byte{
+				0x35, 0x00, 0x00, 0x00, // total document size
+
+				0x04, // etype-array
+				'B', 'S', 'O', 'N', 0x00,
+				0x2a, 0x00, 0x00, 0x00,
+
+				0x02, // etype-string
+				'0', 0x00,
+				0x08, 0x00, 0x00, 0x00,
+				'a', 'w', 'e', 's', 'o', 'm', 'e', 0x00,
+
+				0x01, // etype-double
+				'1', 0x00,
+				0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x14, 0x40,
+
+				0x12, // etype int64
+				'2', 0x00,
+				0xc2, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+
+				0x00, // end slice
+
+				0x00, // end doc
+			},
+		},
+		{
+			"struct->slice ptr",
+			embeddedArrayStructPtr(),
+			[]byte{
+				0x35, 0x00, 0x00, 0x00, // total document size
+
+				0x04, // etype-array
+				'B', 'S', 'O', 'N', 0x00,
+				0x2a, 0x00, 0x00, 0x00,
+
+				0x02, // etype-string
+				'0', 0x00,
+				0x08, 0x00, 0x00, 0x00,
+				'a', 'w', 'e', 's', 'o', 'm', 'e', 0x00,
+
+				0x01, // etype-double
+				'1', 0x00,
+				0x33, 0x33, 0x33, 0x33, 0x33, 0x33, 0x14, 0x40,
+
+				0x12, // etype int64
+				'2', 0x00,
+				0xc2, 0x07, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+
+				0x00, // end slice
+
+				0x00, // end doc
+			},
+		},
+		{
+			"slice->struct",
+			struct {
+				S []HelloStruct
+			}{
+				[]HelloStruct{
+					{
+						"world",
+					},
+					{
+						"mykonos",
+					},
+				},
+			},
+			[]byte{
+				0x41, 0x00, 0x00, 0x00, // total doc size
+
+				0x04, // etype-array
+				'S', 0x00,
+				0x39, 0x00, 0x00, 0x00, // slice size
+
+				0x03, // etype-doc
+				'0', 0x00,
+				0x16, 0x00, 0x00, 0x00, // doc-size
+				0x02, // etype-string
+				'H', 'e', 'l', 'l', 'o', 0x00,
+				0x06, 0x00, 0x00, 0x00,
+				'w', 'o', 'r', 'l', 'd', 0x00,
+				0x00, // doc-term
+
+				0x03, // etype-doc
+				'1', 0x00,
+				0x18, 0x00, 0x00, 0x00, // doc-size
+				0x02,
+				'H', 'e', 'l', 'l', 'o', 0x00,
+				0x08, 0x00, 0x00, 0x00,
+				'm', 'y', 'k', 'o', 'n', 'o', 's', 0x00,
+				0x00, // doc-term
+
+				0x00, // end-slice
+
+				0x00, // doc-end
+			},
+		},
+		{
+			"slice->slice",
+			struct {
+				S [][]int64
+			}{
+				[][]int64{
+					{
+						0x1234567890abcdef,
+						0x11bbccddeeff1122,
+					},
+					{
+						0x0badc0dedeadbeef,
+						0x0badbabe,
+					},
+				},
+			},
+			[]byte{
+				0x49, 0x00, 0x00, 0x00, // total doc length
+
+				0x04, // etype-array
+				'S', 0x00,
+				0x41, 0x00, 0x00, 0x00, // array-length
+
+				0x04,
+				'0', 0x00,
+				0x1b, 0x00, 0x00, 0x00,
+				0x12,
+				'0', 0x00,
+				0xef, 0xcd, 0xab, 0x90, 0x78, 0x56, 0x34, 0x12,
+				0x12,
+				'1', 0x00,
+				0x22, 0x11, 0xff, 0xee, 0xdd, 0xcc, 0xbb, 0x11,
+				0x00,
+
+				0x04,
+				'1', 0x00,
+				0x1b, 0x00, 0x00, 0x00,
+				0x12,
+				'0', 0x00,
+				0xef, 0xbe, 0xad, 0xde, 0xde, 0xc0, 0xad, 0x0b,
+				0x12,
+				'1', 0x00,
+				0xbe, 0xba, 0xad, 0x0b, 0x00, 0x00, 0x00, 0x00,
+				0x00,
+
+				0x00, // end array
+
+				0x00, // end doc
+			},
+		},
+		{
+			"slice->map",
+			struct {
+				S []map[string]any
+			}{
+				[]map[string]any{
+					{
+						"hello": "world",
+					},
+					{
+						"hello": "mykonos",
+					},
+				},
+			},
+			[]byte{
+				0x41, 0x00, 0x00, 0x00, // total doc size
+
+				0x04, // etype-array
+				'S', 0x00,
+				0x39, 0x00, 0x00, 0x00, // slice size
+
+				0x03, // etype-doc
+				'0', 0x00,
+				0x16, 0x00, 0x00, 0x00, // doc-size
+				0x02, // etype-string
+				'h', 'e', 'l', 'l', 'o', 0x00,
+				0x06, 0x00, 0x00, 0x00,
+				'w', 'o', 'r', 'l', 'd', 0x00,
+				0x00, // doc-term
+
+				0x03, // etype-doc
+				'1', 0x00,
+				0x18, 0x00, 0x00, 0x00, // doc-size
+				0x02,
+				'h', 'e', 'l', 'l', 'o', 0x00,
+				0x08, 0x00, 0x00, 0x00,
+				'm', 'y', 'k', 'o', 'n', 'o', 's', 0x00,
+				0x00, // doc-term
+
+				0x00, // end-slice
+
+				0x00, // doc-end
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			buffer, err := Marshal(test.doc)
+			if !assert.Nil(t, err) {
+				return
+			}
+
+			if !assert.Equal(t, test.expected, buffer) {
+				return
+			}
+
+		})
+	}
+}
