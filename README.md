@@ -15,48 +15,45 @@ go get github.com/shimonp21/ezbson
 ## Usage
 
 ```go
-
 type ExampleStruct struct {
 	BSON []any
 }
 
 func main() {
-  // This is the example from https://bsonspec.org/faq.html
+	// This is the example from https://bsonspec.org/faq.html
 	example := ExampleStruct{
 		BSON: []any{"awesome", 5.05, int32(1986)},
 	}
 
-  bson, err := ezbson.Marshal(example)
+	bson, err := ezbson.Marshal(example)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-  // The marshalled document is:
-  // \x31\x00\x00\x00
-  // \x04BSON\x00
-  // \x26\x00\x00\x00
-  // \x02\x30\x00\x08\x00\x00\x00awesome\x00
-  // \x01\x31\x00\x33\x33\x33\x33\x33\x33\x14\x40
-  // \x10\x32\x00\xc2\x07\x00\x00
-  // \x00
-  // \x00
+	// The marshalled document is:
+	// \x31\x00\x00\x00
+	// \x04BSON\x00
+	// \x26\x00\x00\x00
+	// \x02\x30\x00\x08\x00\x00\x00awesome\x00
+	// \x01\x31\x00\x33\x33\x33\x33\x33\x33\x14\x40
+	// \x10\x32\x00\xc2\x07\x00\x00
+	// \x00
+	// \x00
 
-  unmarshalled := ExampleStruct{}
+	unmarshalled := ExampleStruct{}
 	err = ezbson.Unmarshal(bson, &unmarshalled)
 	if err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println(unmarshalled) // {[awesome 5.05 1986]}
-  
-	asMap := make(map[string]any)
-  err = ezbson.Unmarshal(bson, &asMap)
-  if err != nil {
-    log.Fatal(err)
-  }
-  fmt.Println(asMap) // map[BSON:[awesome 5.05 1986]]
-}
-	
 
+	asMap := make(map[string]any)
+	err = ezbson.Unmarshal(bson, &asMap)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(asMap) // map[BSON:[awesome 5.05 1986]]
+}
 ```
 
 ## Limitations
