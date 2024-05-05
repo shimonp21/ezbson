@@ -1,6 +1,6 @@
 # ezbson
 
-Package ezbson is a minimalistic reflection-based implementation of [BSON](https://bsonspec.org) encoding and docoding.
+Package ezbson is a minimalistic reflection-based implementation of [BSON](https://bsonspec.org) encoding and decoding.
 
 While similar to [JSON](https://json.org), BSON can be more fitting in use-cases where binary data needs to be serialized (where usually, JSON would have to use base64/urlencoding/backslash-escaping/...)
 

@@ -1,4 +1,4 @@
-// Package ezbson is a minimalistic reflection-based implementation of [BSON] encoding and docoding.
+// Package ezbson is a minimalistic reflection-based implementation of [BSON] encoding and decoding.
 // Usage is similar to [encoding/json]'s Marshal/Unmarshal.
 //
 // [BSON]: https://bsonspec.org
